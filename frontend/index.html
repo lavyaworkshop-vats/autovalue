@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AutoValue AI - Intelligent Used-Vehicle Valuation Engine</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Custom Styles -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="min-h-screen bg-[#090d16] text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+  <!-- Navigation Bar -->
+  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-sky-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <i class="fa-solid fa-car-side text-white text-lg"></i>
+        </div>
+        <div>
+          <span class="text-xl font-extrabold tracking-tight">AutoValue<span class="text-indigo-400">.AI</span></span>
+          <span class="hidden sm:inline-block ml-2 text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">v2.0 Production</span>
+        </div>
+      </div>
+
+      <!-- Quick Nav Tabs -->
+      <nav class="flex items-center space-x-6 text-sm">
+        <button class="nav-tab text-indigo-400 font-semibold border-b-2 border-indigo-500 pb-1 flex items-center space-x-1.5 transition" data-target="tabValuation">
+          <i class="fa-solid fa-calculator text-xs"></i>
+          <span>Valuation Engine</span>
+        </button>
+        <button class="nav-tab text-slate-400 hover:text-slate-200 pb-1 flex items-center space-x-1.5 transition" data-target="tabSimulation">
+          <i class="fa-solid fa-chart-line text-xs"></i>
+          <span>What-If Simulator</span>
+        </button>
+        <button class="nav-tab text-slate-400 hover:text-slate-200 pb-1 flex items-center space-x-1.5 transition" data-target="tabModelInfo">
+          <i class="fa-solid fa-microchip text-xs"></i>
+          <span>Model Card</span>
+        </button>
+      </nav>
+
+      <!-- API Online Badge -->
+      <div class="hidden md:flex items-center space-x-2 text-xs bg-emerald-950/40 border border-emerald-800/50 text-emerald-400 px-3 py-1.5 rounded-full">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Ridge ML Pipeline Live</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full flex-grow">
+
+    <!-- Hero Subtitle & Quick Presets -->
+    <div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+      <div>
+        <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight">
+          Used Car Valuation & <span class="gradient-text">Market Intelligence</span>
+        </h1>
+        <p class="text-slate-400 text-sm mt-1 max-w-2xl">
+          Powered by a regularized machine learning pipeline trained on Craigslist automotive marketplace data. Predict fair market value, detect deal anomalies, and project empirical depreciation curves.
+        </p>
+      </div>
+
+      <!-- Presets Pill Bar -->
+      <div class="flex items-center space-x-2 text-xs">
+        <span class="text-slate-400"><i class="fa-solid fa-bolt text-indigo-400 mr-1"></i>Presets:</span>
+        <button class="preset-btn px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition" data-preset="rav4">
+          '21 Toyota RAV4
+        </button>
+        <button class="preset-btn px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition" data-preset="f150">
+          '19 Ford F-150
+        </button>
+        <button class="preset-btn px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition" data-preset="m3">
+          '18 BMW M3
+        </button>
+      </div>
+    </div>
+
+    <!-- TAB 1: VALUATION & DEAL EVALUATOR -->
+    <div id="tabValuation" class="tab-content grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+      <!-- LEFT: Input Form (7 Cols) -->
+      <div class="lg:col-span-7 glass-card rounded-2xl p-6 sm:p-8 space-y-6">
+        <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+          <h2 class="text-lg font-bold flex items-center space-x-2">
+            <i class="fa-solid fa-sliders text-indigo-400"></i>
+            <span>Vehicle Specifications</span>
+          </h2>
+          <span class="text-xs text-slate-400">10 Features Required</span>
+        </div>
+
+        <form id="valuationForm" class="space-y-6">
+
+          <!-- Year Slider -->
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <label class="text-xs font-semibold uppercase tracking-wider text-slate-400">Model Year</label>
+              <span id="yearDisplay" class="font-mono text-sm font-bold text-indigo-400 bg-indigo-950/60 border border-indigo-800/40 px-2.5 py-0.5 rounded-md">2018</span>
+            </div>
+            <input type="range" id="yearInput" min="1995" max="2024" value="2018" class="w-full h-2 bg-slate-800 rounded-lg cursor-pointer">
+            <div class="flex justify-between text-[11px] text-slate-500 mt-1">
+              <span>1995</span>
+              <span>2010</span>
+              <span>2020</span>
+              <span>2024</span>
+            </div>
+          </div>
+
+          <!-- Odometer & Quick Pills -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Odometer Mileage (Miles)</label>
+            <div class="relative">
+              <input type="number" id="odometerInput" min="100" max="350000" value="50000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition">
+              <span class="absolute right-4 top-2.5 text-xs text-slate-400">MILES</span>
+            </div>
+            <!-- Quick select pills -->
+            <div class="flex items-center space-x-2 mt-2">
+              <span class="text-[11px] text-slate-500">Quick:</span>
+              <button type="button" class="odo-pill text-xs px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" data-miles="15000">15k</button>
+              <button type="button" class="odo-pill text-xs px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" data-miles="45000">45k</button>
+              <button type="button" class="odo-pill text-xs px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" data-miles="85000">85k</button>
+              <button type="button" class="odo-pill text-xs px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700" data-miles="130000">130k</button>
+            </div>
+          </div>
+
+          <!-- Manufacturer & Body Type Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Manufacturer</label>
+              <select id="manufacturerSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="toyota">Toyota</option>
+                <option value="ford" selected>Ford</option>
+                <option value="chevrolet">Chevrolet</option>
+                <option value="honda">Honda</option>
+                <option value="bmw">BMW</option>
+                <option value="mercedes-benz">Mercedes-Benz</option>
+                <option value="tesla">Tesla</option>
+                <option value="lexus">Lexus</option>
+                <option value="audi">Audi</option>
+                <option value="jeep">Jeep</option>
+                <option value="subaru">Subaru</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Body Type</label>
+              <select id="bodyTypeSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="SUV" selected>SUV</option>
+                <option value="sedan">Sedan</option>
+                <option value="pickup">Pickup</option>
+                <option value="truck">Truck</option>
+                <option value="coupe">Coupe</option>
+                <option value="hatchback">Hatchback</option>
+                <option value="convertible">Convertible</option>
+                <option value="van">Van</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Condition Pills -->
+          <div>
+            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Cosmetic & Mechanical Condition</label>
+            <input type="hidden" id="selectedCondition" value="excellent">
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              <button type="button" class="condition-pill text-xs py-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500 transition text-center font-medium" data-condition="new">New</button>
+              <button type="button" class="condition-pill text-xs py-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500 transition text-center font-medium" data-condition="like new">Like New</button>
+              <button type="button" class="condition-pill text-xs py-2 rounded-xl border bg-indigo-600 text-white border-indigo-400 transition text-center font-medium" data-condition="excellent">Excellent</button>
+              <button type="button" class="condition-pill text-xs py-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500 transition text-center font-medium" data-condition="good">Good</button>
+              <button type="button" class="condition-pill text-xs py-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500 transition text-center font-medium" data-condition="fair">Fair</button>
+              <button type="button" class="condition-pill text-xs py-2 rounded-xl border bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500 transition text-center font-medium" data-condition="salvage">Salvage</button>
+            </div>
+          </div>
+
+          <!-- Powertrain & Title (3 Cols) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Fuel</label>
+              <select id="fuelSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="gas" selected>Gasoline</option>
+                <option value="diesel">Diesel</option>
+                <option value="hybrid">Hybrid</option>
+                <option value="electric">Electric</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Transmission</label>
+              <select id="transmissionSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="automatic" selected>Automatic</option>
+                <option value="manual">Manual</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Drivetrain</label>
+              <select id="driveSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="4wd" selected>4WD / AWD</option>
+                <option value="fwd">FWD</option>
+                <option value="rwd">RWD</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Cylinders, Title & State -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Cylinders</label>
+              <select id="cylindersSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="4 cylinders">4 Cylinders</option>
+                <option value="6 cylinders" selected>6 Cylinders</option>
+                <option value="8 cylinders">8 Cylinders</option>
+                <option value="10 cylinders">10 Cylinders</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Title Status</label>
+              <select id="titleSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="clean" selected>Clean</option>
+                <option value="rebuilt">Rebuilt</option>
+                <option value="salvage">Salvage</option>
+                <option value="lien">Lien</option>
+                <option value="parts only">Parts Only</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1.5">Location (State)</label>
+              <select id="stateSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500">
+                <option value="ca" selected>California (CA)</option>
+                <option value="tx">Texas (TX)</option>
+                <option value="fl">Florida (FL)</option>
+                <option value="ny">New York (NY)</option>
+                <option value="wa">Washington (WA)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Deal Evaluator (Optional Asking Price) -->
+          <div class="p-4 rounded-xl bg-slate-900/80 border border-indigo-950/60 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-indigo-300 flex items-center space-x-1.5">
+                <i class="fa-solid fa-tags"></i>
+                <span>Intelligent Buying Advisor (Optional)</span>
+              </span>
+              <span id="marginDisplay" class="text-xs text-slate-400 font-mono">±15%</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Asking / Listed Price ($)</label>
+                <div class="relative">
+                  <span class="absolute left-3 top-2 text-slate-500 text-sm">$</span>
+                  <input type="number" id="askingPriceInput" placeholder="e.g. 21500" class="w-full bg-slate-800 border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-sm font-mono text-white focus:outline-none focus:border-indigo-500">
+                </div>
+              </div>
+              <div>
+                <label class="block text-[11px] text-slate-400 mb-1">Fair Tolerance Margin</label>
+                <input type="range" id="marginInput" min="0.05" max="0.30" step="0.05" value="0.15" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer mt-2">
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="submitBtn" class="w-full py-3.5 px-4 rounded-xl font-bold text-sm bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-500 hover:from-indigo-500 hover:to-sky-400 text-white shadow-lg shadow-indigo-500/25 transition duration-200 flex items-center justify-center space-x-2">
+            <i id="btnSpinner" class="fa-solid fa-circle-notch fa-spin hidden"></i>
+            <span id="btnText">Calculate Fair Market Value</span>
+          </button>
+        </form>
+      </div>
+
+      <!-- RIGHT: Valuation Output Dashboard (5 Cols) -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- Fair Market Value Card -->
+        <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-4 glow-indigo border-indigo-500/30">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span class="uppercase tracking-wider font-semibold">Estimated Fair Market Value</span>
+            <span class="bg-indigo-950/80 text-indigo-400 border border-indigo-800/60 px-2 py-0.5 rounded text-[11px] font-mono">Calibrated (97.3% R²)</span>
+          </div>
+
+          <!-- Big Price Number -->
+          <div class="py-2">
+            <div id="fairValueDisplay" class="text-4xl sm:text-5xl font-black font-mono tracking-tight text-white">
+              $0.00
+            </div>
+            <p class="text-xs text-slate-400 mt-2">
+              Statistically expected transaction value based on mileage, condition, and market demand.
+            </p>
+          </div>
+
+          <!-- Confidence Interval Bar -->
+          <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-800 space-y-1.5">
+            <div class="flex justify-between text-xs font-semibold text-slate-300">
+              <span>Fair Range (Min)</span>
+              <span>Fair Range (Max)</span>
+            </div>
+            <div class="flex justify-between text-xs font-mono text-slate-400">
+              <span id="rangeMinDisplay">$0</span>
+              <span id="rangeMaxDisplay">$0</span>
+            </div>
+            <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-indigo-500 via-sky-400 to-emerald-400 w-full rounded-full"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deal Evaluation Result (Shown if Asking Price is supplied) -->
+        <div id="dealEvaluationCard" class="hidden glass-card rounded-2xl p-6 space-y-3 transition duration-300">
+          <div class="flex items-center justify-between">
+            <span id="dealBadge" class="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">Evaluation</span>
+            <div id="dealDiffContainer" class="text-xs font-mono">
+              <span id="dealDiff"></span>
+            </div>
+          </div>
+          <h3 id="dealTitle" class="text-lg font-bold text-white"></h3>
+          <p id="dealDescription" class="text-xs text-slate-400 leading-relaxed"></p>
+        </div>
+
+        <!-- Key Valuation Drivers (Explainability) -->
+        <div class="glass-card rounded-2xl p-6 space-y-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center justify-between">
+            <span>Key Valuation Drivers</span>
+            <i class="fa-solid fa-scale-balanced text-indigo-400"></i>
+          </h3>
+          <div id="keyDriversContainer" class="space-y-2.5">
+            <!-- Dynamically injected driver tags -->
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: WHAT-IF SIMULATION & DEPRECIATION CHARTS -->
+    <div id="tabSimulation" class="tab-content hidden space-y-8">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Mileage Curve Chart -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-base text-white">Mileage Depreciation Curve</h3>
+              <p class="text-xs text-slate-400">Projected valuation decline from 10k to 200k odometer miles</p>
+            </div>
+            <i class="fa-solid fa-road text-indigo-400"></i>
+          </div>
+          <div class="h-64 sm:h-72 w-full">
+            <canvas id="mileageChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Condition Impact Chart -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-bold text-base text-white">Condition Impact Comparison</h3>
+              <p class="text-xs text-slate-400">Expected market price variation across physical condition tiers</p>
+            </div>
+            <i class="fa-solid fa-wrench text-sky-400"></i>
+          </div>
+          <div class="h-64 sm:h-72 w-full">
+            <canvas id="conditionChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 3: ML ARCHITECTURE & MODEL CARD -->
+    <div id="tabModelInfo" class="tab-content hidden space-y-6">
+      
+      <!-- Metrics Grid -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div class="glass-card rounded-xl p-5 text-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">Coefficient of Determination</span>
+          <div id="metricR2" class="text-2xl font-bold font-mono text-emerald-400 mt-1">0.9729</div>
+          <span class="text-[11px] text-slate-500">Test R² Score</span>
+        </div>
+        <div class="glass-card rounded-xl p-5 text-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">Mean Absolute Error</span>
+          <div id="metricMAE" class="text-2xl font-bold font-mono text-sky-400 mt-1">$972.41</div>
+          <span class="text-[11px] text-slate-500">Average Dollar Error</span>
+        </div>
+        <div class="glass-card rounded-xl p-5 text-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">Root Mean Squared Error</span>
+          <div id="metricRMSE" class="text-2xl font-bold font-mono text-indigo-400 mt-1">$1,628.48</div>
+          <span class="text-[11px] text-slate-500">RMSE Dollar Scale</span>
+        </div>
+        <div class="glass-card rounded-xl p-5 text-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">One-Hot Dimensions</span>
+          <div id="metricFeatures" class="text-2xl font-bold font-mono text-amber-400 mt-1">139</div>
+          <span class="text-[11px] text-slate-500">Transformed Columns</span>
+        </div>
+      </div>
+
+      <!-- Architecture Explainer -->
+      <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-4">
+        <h3 class="text-lg font-bold text-white flex items-center space-x-2">
+          <i class="fa-solid fa-diagram-project text-indigo-400"></i>
+          <span>Pipeline Architecture & Mathematical Formulation</span>
+        </h3>
+        <p class="text-sm text-slate-300 leading-relaxed">
+          The pipeline models the logarithmically transformed target variable \( y = \ln(1 + \text{price}) \) to counteract positive skewness and stabilize variance across multiple price tiers.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 text-xs">
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+            <h4 class="font-bold text-slate-200 mb-1">1. Preprocessing Stage</h4>
+            <p class="text-slate-400 leading-relaxed">
+              Continuous attributes are normalized using <code>StandardScaler</code>. Categorical variables are encoded with <code>OneHotEncoder(handle_unknown='ignore')</code> to support unseen production values.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+            <h4 class="font-bold text-slate-200 mb-1">2. Regularized Estimator</h4>
+            <p class="text-slate-400 leading-relaxed">
+              Trained using $L_2$-regularized Ridge Regression (\(\alpha = 1.0\)), penalizing collinear one-hot categories while producing stable, interpretable feature attributions.
+            </p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900 border border-slate-800">
+            <h4 class="font-bold text-slate-200 mb-1">3. Decision-Support Layer</h4>
+            <p class="text-slate-400 leading-relaxed">
+              Back-transforms output using \(\hat{\text{price}} = \exp(\hat{y}) - 1\), computes \(\pm 15\%\) tolerance margins, and categorizes listings into Fair, Overpriced, or Undervalued.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <span>AutoValue AI &bull; Complete AIML Engineering Project &bull; Author: Vatsal</span>
+      <span>FastAPI Backend + Scikit-Learn Pipeline + Tailwind CSS SPA</span>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
